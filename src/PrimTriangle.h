@@ -98,5 +98,5 @@ public:
 private:
 	Vec3f m_a;	///< Position of the first vertex
 	Vec3f m_b;	///< Position of the second vertex
-	Vec3f m_c;	///< Position of the third vertex
+	Vec3f m_c;	///< Position of the third vertex  
 };
