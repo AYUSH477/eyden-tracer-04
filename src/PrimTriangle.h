@@ -54,9 +54,19 @@ public:
 		if (ray.t <= f || f <  Epsilon  ) return false;
 		
 		// --- PUT YOUR CODE HERE ---
-		// ray.u = ...
-		// ray.v = ...
+		Vec3f p = ray.org + f * ray.dir;
+		Vec3f AC = m_c - m_a;
+		Vec3f BC = m_c - m_b; 
+		float area = norm(edge1.cross(edge2));
 
+		Vec3f Vec_AP = p - m_a;
+		Vec3f Vec_BP = p - m_b;
+		float area_U = norm(Vec_BP.cross(BC));
+		ray.u = area_U / area;
+
+		float area_V = norm(Vec_AP.cross(AC));
+		ray.v = area_V / area;
+		
 		ray.t = f;
 		ray.hit = this;
 		return true;
