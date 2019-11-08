@@ -32,15 +32,20 @@ public:
 	{
 		// --- PUT YOUR CODE HERE ---
 
-		Vec3f dPdu = (1, 0, 0);
-		Vec3f dPdv = (0, 0, 1);
-		Vec3f h = ray.org + ray.t * ray.dir;
-		float delta_u = 0.5f * cos(3 * h[0] * sin(h[2]));
-		float delta_v = 0.5f * sin(13 * h[2]); 
-
 		// get shading normal
-		Vec3f normal0 = ray.hit->getNormal(ray);
-		Vec3f normal = normalize(normal0 + delta_u * dPdu + delta_v * dPdv);
+
+		/*
+			Using bump mapping
+		*/
+		Vec3f dPdu(1, 0, 0);
+		Vec3f dPdv(0, 0, 1);
+		Vec3f hitPoint = ray.org + ray.t * ray.dir;
+
+		float delta_u = 0.5 * cos(3 * hitPoint[0] * sin(hitPoint[2]));
+		float delta_v = 0.5 * sin(13 * hitPoint[2]);
+
+		Vec3f normal = normalize(ray.hit->getNormal(ray) + delta_u * dPdu + delta_v * dPdv);
+
 		// turn normal to front
 		if (normal.dot(ray.dir) > 0)
 			normal = -normal;

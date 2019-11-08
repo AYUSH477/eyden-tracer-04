@@ -17,11 +17,16 @@ void CScene::ParseOBJ(const std::string& fileName)
 	if (file.is_open()) {
 		std::cout << "Parsing OBJFile : " << fileName << std::endl;
 
+		// Eyelight Shader
 		// std::shared_ptr<IShader> pShader = std::make_shared<CShaderEyelight>(RGB(1, 0.5f, 0));
-		std::shared_ptr<IShader> pShader = std::make_shared<CShaderEyelightTextured>(RGB(0.5f, 0.5f, 0.5f), "../data/barney.bmp");
+
+		// Eyelight Texture Shader
+		std::shared_ptr<IShader> pShader = std::make_shared<CShaderEyelightTextured>(RGB(0.5f, 0.5f, 0.5f), "../data/cb.bmp");
+		
 		std::vector<Vec3f> vVertexes;
-		std::vector<Vec2f> tempuvs;
-		std::vector<Vec3f> temp_normal;
+		std::vector<Vec3f> nVertexes;
+		std::vector<Vec2f> tVertexes;
+		
 		std::string line;
 
 		for (;;) {
@@ -34,27 +39,51 @@ void CScene::ParseOBJ(const std::string& fileName)
 				// std::cout << "Vertex: " << v << std::endl;
 				vVertexes.emplace_back(v);
 			}
-			else if (line == "vt"){
-				Vec2f vt;
-				for (int i = 0; i < 2; i++) ss >> vt.val[i];
-				tempuvs.emplace_back(vt);
-			}
-			else if (line == "vn"){
-				Vec3f vn;
-				for (int i = 0; i < 2; i++) ss >> vn.val[i];
-				temp_normal.emplace_back(vn);
-			} 
 			else if (line == "f") {
-				Vec3i f0,f1,f2;
-				char c;
-				for (int i = 0; i < 3; i++){
-					ss >> f0.val[i] >> c >> f1.val[i] >> c >> f2.val[i];
-					//std:: cout << i << "\t" << f0.val[i] << c << f1.val[i] << c << f2.val[i] << std::endl;
-				} 
-				// std::cout << "Face: " << f << std::endl;
-				//Add(std::make_shared<CPrimTriangle>(vVertexes[f0.val[0] - 1], vVertexes[f0.val[1] - 1], vVertexes[f0.val[2] - 1], pShader));
-				//Add(std::make_shared<CPrimTriangleSmooth>(vVertexes[f0.val[0]-1],vVertexes[f0.val[1]-1],vVertexes[f0.val[2]- 1],temp_normal[f2.val[0]-1],temp_normal[f2.val[1]-1],temp_normal[f2.val[2]-1], pShader));
-				Add(std::make_shared<CPrimTriangleSmoothTextured>(vVertexes[f0.val[0]-1],vVertexes[f0.val[1]-1],vVertexes[f0.val[2]- 1],temp_normal[f2.val[0]-1],temp_normal[f2.val[1]-1],temp_normal[f2.val[2]-1], tempuvs[f1.val[0] - 1], tempuvs[f1.val[1]-1], tempuvs[f1.val[2]-1], pShader));
+				// indices to reference (v1,vt1,vn1), (v2, vt2, vn2) and (v3, vt3, vn3)
+				int indices[3][3];
+
+				std::stringstream v_vt_vn;
+				std::string lookup;
+
+				for(int i=0; i<3; i++) {
+					// extract vertex[i], texture[i], and normal[i]
+					ss >> lookup;
+					v_vt_vn = std::stringstream(lookup);
+					for(int j=0; j<3; j++) {
+						getline(v_vt_vn, lookup, '/');
+						indices[i][j] = stoi(lookup) - 1;
+					}
+				}
+
+				// triangles with vertex normals and texture coordinates
+				Add(std::make_shared<CPrimTriangleSmoothTextured>(
+					vVertexes[indices[0][0]], vVertexes[indices[1][0]], vVertexes[indices[2][0]],
+					nVertexes[indices[0][2]], nVertexes[indices[1][2]], nVertexes[indices[2][2]],
+					tVertexes[indices[0][1]], tVertexes[indices[1][1]], tVertexes[indices[2][1]],
+					pShader));
+
+				// triangles with vertex normals
+				// Add(std::make_shared<CPrimTriangleSmooth>(
+				// 	vVertexes[indices[0][0]], vVertexes[indices[1][0]], vVertexes[indices[2][0]],
+				// 	nVertexes[indices[0][2]], nVertexes[indices[1][2]], nVertexes[indices[2][2]],
+				// 	pShader));
+
+				// triangles with no vertex normals
+				// Add(std::make_shared<CPrimTriangle>(
+				// 	vVertexes[indices[0][0]], vVertexes[indices[1][0]], vVertexes[indices[2][0]],
+				// 	pShader));
+			}
+			else if(line == "vn") {
+				// vertex normals
+				Vec3f v;
+				for(int i=0; i < 3; i++) ss >> v.val[i];
+				nVertexes.emplace_back(v);
+			} else if(line == "vt") {
+				// texture coordinates
+				Vec2f v;
+				for(int i=0; i<2; i++) ss >> v.val[i];
+				tVertexes.emplace_back(v);
 			}
 			else {
 				std::cout << "Unknown key [" << line << "] met in the OBJ file" << std::endl;

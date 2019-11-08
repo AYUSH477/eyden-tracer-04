@@ -19,16 +19,17 @@
 #include "LightArea.h"
 #include "timer.h"
 
+#define ENABLE_SUPERSAMPLING
+
 Mat RenderFrame(void)
 {
 	// Define a scene
 	CScene scene;
 
 	// Load scene description 
-//	scene.ParseOBJ("../data/cylinder16.obj");
-//	scene.ParseOBJ("../data/cone32.obj");
-//	scene.ParseOBJ("../data/ground.obj");
-	scene.ParseOBJ("../data/barney.obj");
+	// scene.ParseOBJ("../data/cone32.obj");
+	// scene.ParseOBJ("../data/barney.obj");
+	scene.ParseOBJ("../data/ground.obj");
 
 #ifdef ENABLE_BSP
 	// Build BSPTree
@@ -63,14 +64,20 @@ Mat RenderFrame(void)
 
 
 #ifdef ENABLE_SUPERSAMPLING
-	auto sampleGenerator = std::make_unique<CSampleGeneratorRegular>();
-//	auto sampleGenerator = std::make_unique<CSampleGeneratorRandom>();
-//	auto sampleGenerator = std::make_unique<CSampleGeneratorStratified>();
-	int nSamples = 16;
+	// auto sampleGenerator = std::make_unique<CSampleGeneratorRegular>();
+	// auto sampleGenerator = std::make_unique<CSampleGeneratorRandom>();
+	auto sampleGenerator = std::make_unique<CSampleGeneratorStratified>();
+	int nSamples = 16.0f;
+	float u[16], v[16], weight[16];
 
 	for (int y = 0; y < img.rows; y++) {
 		for (int x = 0; x < img.cols; x++) {
 			// --- PUT YOUR CODE HERE ---
+			sampleGenerator.get()->getSamples(nSamples, u, v, weight);
+			for(int i=0; i<16; i++) {
+				scene.m_pCamera->InitRay(x+u[i], y+v[i], ray); // initialize ray
+				img.at<Vec3f>(y+v[i], x+u[i]) = scene.RayTrace(ray);
+			}
 		}
 	}
 #else

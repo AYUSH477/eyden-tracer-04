@@ -54,19 +54,25 @@ public:
 		if (ray.t <= f || f <  Epsilon  ) return false;
 		
 		// --- PUT YOUR CODE HERE ---
-		Vec3f p = ray.org + f * ray.dir;
-		Vec3f AC = m_c - m_a;
-		Vec3f BC = m_c - m_b; 
-		float area = norm(edge1.cross(edge2));
 
-		Vec3f Vec_AP = p - m_a;
-		Vec3f Vec_BP = p - m_b;
-		float area_U = norm(Vec_BP.cross(BC));
-		ray.u = area_U / area;
+		/**
+		//  *     (gamma)         B
+		//  * A     P  (alpha)
+		//  *     (beta)          C
+		//  * */ 
+		// (u) is on A's oppsite side, (v) is on B's opposite side
 
-		float area_V = norm(Vec_AP.cross(AC));
-		ray.v = area_V / area;
-		
+		// compute the intersection point P to calculate barcycentric coordinates
+		Vec3f P = ray.org + f * ray.dir;
+
+		Vec3f AP = P - m_a;
+
+		// compute triangle area
+		float area = (float) norm(edge1.cross(edge2)) / 2.0f;
+
+		ray.u = (float) norm(AP.cross(edge1)) / (2.0f * area);
+		ray.v = (float) norm(AP.cross(edge2)) / (2.0f * area);
+
 		ray.t = f;
 		ray.hit = this;
 		return true;
